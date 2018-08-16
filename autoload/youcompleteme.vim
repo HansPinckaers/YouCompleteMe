@@ -45,6 +45,10 @@ let s:pollers = {
       \   'receive_messages': {
       \     'id': -1,
       \     'wait_milliseconds': 100
+      \   },
+      \   'invoke': {
+      \     'id': 2,
+      \     'wait_milliseconds': 25
       \   }
       \ }
 
@@ -673,8 +677,19 @@ function! s:OnTextChangedInsertMode()
         \ !s:InsideCommentOrStringAndShouldStop() &&
         \ !s:OnBlankLine()
     " Immediately call previous completion to avoid flickers.
-    call s:Complete()
-    call s:InvokeCompletion()
+    if pumvisible()
+    else
+      if s:completion.start_column > col( '.' ) || empty( s:completion.candidates )
+      else
+        call s:SendKeys( "\<C-X>\<C-U>" )
+      endif
+    endif
+    call timer_stop( s:pollers.invoke.id )
+    let s:pollers.invoke.id = timer_start(
+          \ 1,
+          \ function( 's:InvokeCompletion' ) )
+    " call s:InvokeCompletion()
+    return
   endif
 
   exec s:python_command "ycm_state.OnCursorMoved()"
@@ -767,7 +782,7 @@ function! s:OnBlankLine()
 endfunction
 
 
-function! s:InvokeCompletion()
+function! s:InvokeCompletion( ... )
   exec s:python_command "ycm_state.SendCompletionRequest(" .
         \ "vimsupport.GetBoolValue( 's:force_semantic' ) )"
 
@@ -780,7 +795,7 @@ function! s:InvokeSemanticCompletion()
     let s:force_semantic = 1
     exec s:python_command "ycm_state.SendCompletionRequest( True )"
 
-    call s:PollCompletion()
+    " call s:PollCompletion()
   endif
 
   " Since this function is called in a mapping through the expression register
@@ -792,6 +807,8 @@ endfunction
 
 function! s:PollCompletion( ... )
   if !s:Pyeval( 'ycm_state.CompletionRequestReady()' )
+    call timer_stop( s:pollers.completion.id )
+    " sleep 10m
     let s:pollers.completion.id = timer_start(
           \ s:pollers.completion.wait_milliseconds,
           \ function( 's:PollCompletion' ) )
@@ -821,7 +838,7 @@ function! s:Complete()
     " automatically replaces the current text with it. Calling <c-p> forces Vim to
     " deselect the first candidate and in turn preserve the user's current text
     " until he explicitly chooses to replace it with a completion.
-    call s:SendKeys( "\<C-X>\<C-U>\<C-P>" )
+    call s:SendKeys( "\<C-X>\<C-U>" )
   endif
 endfunction
 
