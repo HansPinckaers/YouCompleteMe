@@ -124,6 +124,7 @@ class YouCompleteMe( object ):
     self._SetUpLogging()
     self._SetUpServer()
     self._ycmd_keepalive.Start()
+    self._cleared_signatures = False
 
 
   def _SetUpServer( self ):
@@ -292,6 +293,7 @@ class YouCompleteMe( object ):
 
 
   def SendCompletionRequest( self, force_semantic = False ):
+    vim.eval("jedi#clear_call_signatures()")
     request_data = BuildRequestData()
     request_data[ 'force_semantic' ] = force_semantic
     if not self.NativeFiletypeCompletionUsable():
@@ -313,6 +315,7 @@ class YouCompleteMe( object ):
 
 
   def GetCompletionResponse( self ):
+    vim.eval("jedi#show_cache_signatures()")
     response = self._latest_completion_request.Response()
     response[ 'completions' ] = base.AdjustCandidateInsertionText(
         response[ 'completions' ] )
