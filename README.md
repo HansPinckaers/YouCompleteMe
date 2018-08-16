@@ -1,5 +1,9 @@
+Fork details
+=============
+This fork contains some hacks to make YCM flicker less and behave better with Jedi's call signatures.
+
 YouCompleteMe: a code-completion engine for Vim
-===============================================
+-----------------------------------------------
 
 [![Gitter room](https://img.shields.io/gitter/room/Valloric/YouCompleteMe.svg)](https://gitter.im/Valloric/YouCompleteMe)
 [![Linux build status](https://img.shields.io/travis/Valloric/YouCompleteMe/master.svg?label=Linux)](https://travis-ci.org/Valloric/YouCompleteMe)
